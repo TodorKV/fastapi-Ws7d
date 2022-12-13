@@ -2,26 +2,63 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 app = FastAPI()
+ALPHABET = 26
 
 class Msg(BaseModel):
     msg: str
 
+class Encode(BaseModel):
+    key: str
+    message: str
+
+class Decode(BaseModel):
+    key: str
+    code: str
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World. Welcome to FastAPI!"}
+    return {"message": "Тодор Вълков 471221113 76гр."}
 
+@app.post("/encode")
+async def encoding(enc: Encode):
+    # шифриране
+    P = enc.message
+    P = P.upper()
+    P = P.replace(" ", "")
+    pLen = len(P)
 
-@app.get("/path")
-async def demo_get():
-    return {"message": "This is /path endpoint, use a post request to transform the text to uppercase"}
+    K = enc.key
+    K = K.upper()
+    kLen = len(K)
 
+    if pLen % kLen != 0:
+        return "Дължината на ключа не е кратна на дължината на изречението!"
+        
+    result = ""
+    for idx in range(0, pLen):
+        asciiCode = ord(P[idx]) + ord(K[idx % kLen])
+        alphabetIdx = (asciiCode - ord('A') * 2 ) % ALPHABET
+        result = result + chr(ord('A') + alphabetIdx + 1) 
+    return result
 
-@app.post("/path")
-async def demo_post(inp: Msg):
-    return {"message": inp.msg.upper()}
+@app.post("/decode")
+async def decoding(dec: Decode):
+    # дешифриране
+    P = dec.code
+    P = P.upper()
+    P = P.replace(" ", "")
+    pLen = len(P)
 
+    K = dec.key
+    K = K.upper()
+    kLen = len(K)
 
-@app.get("/path/{path_id}")
-async def demo_get_path_id(path_id: int):
-    return {"message": f"This is /path/{path_id} endpoint, use post request to retrieve result"}
+    if pLen % kLen != 0:
+        return "Дължината на ключа не е кратна на дължината на изречението!"
+        
+    result = ""
+    for idx in range(0, pLen):
+        asciiCode = ord(P[idx]) - ord(K[idx % kLen])
+        asciiCode = (asciiCode + ALPHABET) % ALPHABET
+        result = result + chr(ord('A') + asciiCode - 1) 
+    return result
