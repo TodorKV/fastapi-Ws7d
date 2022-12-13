@@ -4,9 +4,6 @@ from pydantic import BaseModel
 app = FastAPI()
 ALPHABET = 26
 
-class Msg(BaseModel):
-    msg: str
-
 class Encode(BaseModel):
     key: str
     message: str
@@ -31,6 +28,16 @@ async def encoding(enc: Encode):
     K = K.upper()
     kLen = len(K)
 
+    # проверка дали P съдържа само букви
+    for idx in range(0, pLen):
+        if P[idx] < 'A' or P[idx] > 'Z':
+            return "Изречението съдържа символи различни от букви!"
+
+    # проверка дали K съдържа само букви
+    for idx in range(0, kLen):
+        if K[idx] < 'A' or K[idx] > 'Z':
+            return "Ключът съдържа символи различни от букви!"
+
     if pLen % kLen != 0:
         return "Дължината на ключа не е кратна на дължината на изречението!"
         
@@ -44,21 +51,31 @@ async def encoding(enc: Encode):
 @app.post("/decode")
 async def decoding(dec: Decode):
     # дешифриране
-    P = dec.code
-    P = P.upper()
-    P = P.replace(" ", "")
-    pLen = len(P)
+    Code = dec.code
+    Code = Code.upper()
+    Code = Code.replace(" ", "")
+    codeLen = len(Code)
 
     K = dec.key
     K = K.upper()
     kLen = len(K)
 
-    if pLen % kLen != 0:
-        return "Дължината на ключа не е кратна на дължината на изречението!"
+    # проверка дали кодът съдържа само букви
+    for idx in range(0, codeLen):
+        if P[idx] < 'A' or Code[idx] > 'Z':
+            return "Шифрираното изречение съдържа символи различни от букви!"
+
+    # проверка дали K съдържа само букви
+    for idx in range(0, kLen):
+        if K[idx] < 'A' or K[idx] > 'Z':
+            return "Ключът съдържа символи различни от букви!"
+
+    if codeLen % kLen != 0:
+        return "Дължината на ключа не е кратна на дължината на шифрираното изречение!"
         
     result = ""
-    for idx in range(0, pLen):
-        asciiCode = ord(P[idx]) - ord(K[idx % kLen])
-        asciiCode = (asciiCode + ALPHABET) % ALPHABET
-        result = result + chr(ord('A') + asciiCode - 1) 
+    for idx in range(0, codeLen):
+        division = ord(Code[idx]) - ord(K[idx % kLen])
+        letterIdx = (division + ALPHABET) % ALPHABET
+        result = result + chr(ord('A') + letterIdx - 1)
     return result
